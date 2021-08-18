@@ -71,7 +71,10 @@ const Producto = () => {
         const nuevoTotal = votos + 1;
 
         // Verificar si el usuario ha votado
-        if ( haVotado.includes(usuario.uid) ) return;
+        if ( haVotado.includes(usuario.uid) ) {
+            console.log('sssssss')
+            return;
+        };
         // Guardar rl ID del usuario que ha votado
         const nuevoHaVotado = [...haVotado, usuario.uid];
         // Actualizar en la BD
@@ -108,7 +111,7 @@ const Producto = () => {
         };
 
         // Información extra al comentario
-        comentario.usuarioId = usuariouid;
+        comentario.usuarioId = usuario.uid;
         comentario.usuarioNombre = usuario.displayName;
         // Tomar copia de comentarios y agregarlos al arreglo
         const nuevosComentarios = [...comentarios, comentario];
@@ -123,6 +126,32 @@ const Producto = () => {
             comentarios: nuevosComentarios
         });
         setConsultarDB(true); // Hay un comentario, por lo tanto consultar a la DB
+    };
+
+    // Revisar si el creador del producto es el mismo que está autenticado
+    const puedeBorrar = () => {
+        if (!usuario) return false;
+
+        if (creador.id === usuario.uid) {
+            return true;
+        }
+    };
+
+    // Elimina un producto de la BD
+    const eliminarproducto = async () => {
+        if (!usuario) {
+            return router.push('/login');
+        };
+        
+        if (creador.id !== usuario.uid) {
+            return router.push('/');
+        }
+        try {
+            await firebase.db.collection('productos').doc(id).delete();
+            router.push('/');
+        } catch (error) {
+            console.log(error);
+        }
     };
     
     return (
@@ -237,6 +266,12 @@ const Producto = () => {
                             </aside>
                             
                         </ContenedorProducto>
+                        
+                        { puedeBorrar() &&
+                            <Boton
+                                onClick={eliminarproducto}
+                            >Eliminar producto</Boton>
+                        }
                         
                     </div>
                 ) }
